@@ -1,0 +1,8 @@
+# Go build output
+neo-chat
+
+# Data files
+*.csv
+
+# OS files
+.DS_Store
