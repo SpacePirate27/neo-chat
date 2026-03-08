@@ -30,4 +30,21 @@ func main() {
 		return
 	}
 	fmt.Println("Wrote small_bodies.csv")
+
+	sentry, err := fetchSentry()
+
+	if err != nil {
+		fmt.Println("Error fetching Sentry:", err)
+		return
+	}
+	fmt.Printf("Fetched %s sentry objects\n", sentry.Count)
+
+	sentryFields, sentryData := sentryToCSVData(sentry)
+	err = writeCSV("sentry.csv", sentryFields, sentryData)
+	if err != nil {
+		fmt.Println("Error writing Sentry CSV:", err)
+		return
+	}
+	fmt.Println("Wrote sentry.csv")
+
 }

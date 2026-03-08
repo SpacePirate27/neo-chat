@@ -94,3 +94,69 @@ func writeCSV(filename string, fields []string, data [][]any) error {
 
 	return nil
 }
+
+// SentryObject represents a single object from NASA's Sentry API,
+// which tracks NEOs with non-zero Earth impact probability.
+type SentryObject struct {
+	Des       string `json:"des"`
+	Fullname  string `json:"fullname"`
+	H         string `json:"h"`
+	Diameter  string `json:"diameter"`
+	IP        string `json:"ip"`
+	PSCum     string `json:"ps_cum"`
+	PSMax     string `json:"ps_max"`
+	TSMax     string `json:"ts_max"`
+	NImp      int    `json:"n_imp"`
+	Range     string `json:"range"`
+	VInf      string `json:"v_inf"`
+	LastObs   string `json:"last_obs"`
+	LastObsJD string `json:"last_obs_jd"`
+	ID        string `json:"id"`
+}
+
+// SentryResponse represents the JSON response from NASA's Sentry API.
+type SentryResponse struct {
+	Signature struct {
+		Version string `json:"version"`
+		Source  string `json:"source"`
+	} `json:"signature"`
+	Count string          `json:"count"`
+	Data  []SentryObject  `json:"data"`
+}
+
+// fetchSentry retrieves all objects from NASA's Sentry impact risk API.
+func fetchSentry() (*SentryResponse, error) {
+	url := "https://ssd-api.jpl.nasa.gov/sentry.api"
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("http get failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var data SentryResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return nil, fmt.Errorf("json decode failed: %w", err)
+	}
+
+	return &data, nil
+}
+
+// sentryToCSVData converts SentryResponse into fields and rows
+// so it can be written using writeCSV.
+func sentryToCSVData(s *SentryResponse) ([]string, [][]any) {
+	fields := []string{"des", "fullname", "h", "diameter", "ip", "ps_cum",
+		"ps_max", "ts_max", "n_imp", "range", "v_inf", "last_obs", "last_obs_jd", "id"}
+
+	data := make([][]any, len(s.Data))
+	for i, obj := range s.Data {
+		data[i] = []any{
+			obj.Des, obj.Fullname, obj.H, obj.Diameter, obj.IP, obj.PSCum,
+			obj.PSMax, obj.TSMax, obj.NImp, obj.Range, obj.VInf,
+			obj.LastObs, obj.LastObsJD, obj.ID,
+		}
+	}
+
+	return fields, data
+}
